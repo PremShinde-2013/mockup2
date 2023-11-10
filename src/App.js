@@ -1,23 +1,20 @@
-import logo from './logo.svg';
-import './App.css';
+import "./App.css";
+import ElectricityBillPage from "./components/forms/ElectricityBillPage";
+import GetName from "./components/forms/GetName";
+import SolarQuotesPage from "./components/forms/SolarQuotesPage";
+import SolarRoofFinderPage from "./components/forms/SolarRoofFinderPage";
+import SuccessPage from "./components/forms/SuccessPage";
+// import Contact from "./components/forms/Contact";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className='App'>
+      {/* <SolarQuotesPage /> */}
+      {/* <ElectricityBillPage /> */}
+      {/* <SolarRoofFinderPage /> */}
+      {/* <GetName /> */}
+      {/* <Contact /> */}
+      <SuccessPage />
     </div>
   );
 }
