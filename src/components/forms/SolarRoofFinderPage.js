@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Grid, Container, Typography, Button, TextField } from "@mui/material";
 import { GoogleMap, useLoadScript, Marker } from "@react-google-maps/api";
+import Autocomplete from "react-google-autocomplete"; // Import the Autocomplete component
 import { useCallback } from "react";
 import styled from "@emotion/styled";
 import { green } from "@mui/material/colors";
@@ -18,15 +19,18 @@ const StyledButton = styled(Button)({
   },
 });
 
+const MAP_LIBRARIES = ["places"];
+
 const SolarRoofFinderPage = () => {
   const [address, setAddress] = useState("");
   const [quoteType, setQuoteType] = useState("");
   const [mapCenter, setMapCenter] = useState({ lat: 0, lng: 0 });
-  const [selectedOption, setSelectedOption] = React.useState(null);
+  const [selectedOption, setSelectedOption] = useState(null);
 
   const handleAddressChange = (event) => {
     setAddress(event.target.value);
   };
+
   const handleButtonClick = (option) => {
     setSelectedOption(option);
   };
@@ -39,10 +43,9 @@ const SolarRoofFinderPage = () => {
     return address === "" || quoteType === "" || mapCenter === null;
   };
 
-  const libraries = ["places"];
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: "AIzaSyC2ZXSrfYaqsipTWhD5DKyTZyVRSFL391A", // Replace with your API key
-    libraries,
+    googleMapsApiKey: "YOUR_GOOGLE_MAPS_API_KEY", // Replace with your API key
+    libraries: MAP_LIBRARIES,
   });
 
   const onMapLoad = useCallback(
@@ -59,6 +62,17 @@ const SolarRoofFinderPage = () => {
     },
     [setMapCenter]
   );
+
+  const onPlaceSelected = (place) => {
+    setAddress(place.formatted_address);
+
+    if (place.geometry) {
+      setMapCenter({
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+      });
+    }
+  };
 
   if (loadError) return "Error loading maps";
   if (!isLoaded) return "Loading maps";
@@ -80,30 +94,34 @@ const SolarRoofFinderPage = () => {
         </Grid>
 
         <Grid item xs={12} style={{ marginBottom: "16px" }}>
-          <GoogleMap
-            id='map'
-            mapContainerStyle={{ width: "100%", height: "200px" }}
-            zoom={15}
-            onLoad={onMapLoad}
-            options={{
-              disableDefaultUI: true,
-            }}
-          >
-            {mapCenter && <Marker position={mapCenter} />}
-          </GoogleMap>
-        </Grid>
-        <Grid item xs={12} style={{ marginBottom: "16px" }}>
-          <TextField
-            id='address'
-            label='Address'
-            variant='outlined'
-            fullWidth
-            value={address}
-            onChange={handleAddressChange}
+          <Autocomplete
+            apiKey='YOUR_GOOGLE_MAPS_API_KEY'
+            onPlaceSelected={onPlaceSelected}
+            types={["address"]}
+            componentrestrictions={{ country: "us" }}
           />
         </Grid>
+
+        <Grid item xs={12} style={{ height: "60vh", position: "relative" }}>
+          <GoogleMap
+            id='map'
+            mapContainerStyle={{
+              width: "100%",
+              height: "100%",
+            }}
+            zoom={15}
+            center={mapCenter}
+            onLoad={onMapLoad}
+          >
+            {mapCenter && (
+              <Marker position={{ lat: mapCenter.lat, lng: mapCenter.lng }} />
+            )}
+          </GoogleMap>
+        </Grid>
+
         <Grid item style={{ marginLeft: "auto", marginTop: "40px" }}>
           <StyledButton
+            disabled={isNextButtonDisabled()}
             onClick={() => handleButtonClick("Next")}
             sx={{
               width: "100px",

@@ -53,7 +53,7 @@ const ElectricityBillPage = () => {
         spacing={2}
         justifyContent='center'
         alignItems='center'
-        style={{ height: "100vh", flexDirection: "column" }}
+        style={{ height: "60vh", flexDirection: "column" }}
       >
         <Grid
           container

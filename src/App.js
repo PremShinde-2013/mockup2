@@ -11,10 +11,10 @@ function App() {
     <div className='App'>
       {/* <SolarQuotesPage /> */}
       {/* <ElectricityBillPage /> */}
-      {/* <SolarRoofFinderPage /> */}
+      <SolarRoofFinderPage />
       {/* <GetName /> */}
       {/* <Contact /> */}
-      <SuccessPage />
+      {/* <SuccessPage /> */}
     </div>
   );
 }
