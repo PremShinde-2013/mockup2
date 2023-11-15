@@ -1,30 +1,52 @@
-import React from "react";
-import { Grid, Container, Button, Typography, IconButton } from "@mui/material";
+import React, { useState } from "react";
+import {
+  Grid,
+  Container,
+  Button,
+  Typography,
+  Snackbar,
+  Alert,
+} from "@mui/material";
 import { styled } from "@mui/system";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import { green } from "@mui/material/colors";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 // Custom styled component for the buttons
 const StyledButton = styled(Button)({
   color: "black",
-  border: "1px solid black",
+  border: "1px solid green",
   "&:hover": {
-    backgroundColor: "white",
     color: "black",
     border: "1px solid green",
   },
   "&.Mui-selected": {
-    backgroundColor: "green",
-    color: "white",
-    border: "1px solid green",
+    color: "black",
+    border: "2px solid green",
   },
 });
 
 const SolarQuotesPage = () => {
-  const [selectedOption, setSelectedOption] = React.useState(null);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [showSnackbar, setShowSnackbar] = useState(false);
+  const navigate = useNavigate();
 
   const handleButtonClick = (option) => {
     setSelectedOption(option);
+  };
+
+  const handleNextButtonClick = () => {
+    if (selectedOption) {
+      // If an option is selected, navigate to /electricity-bill
+      navigate("/electricity-bill");
+    } else {
+      // If no option is selected, show Snackbar
+      setShowSnackbar(true);
+    }
+  };
+
+  const handleSnackbarClose = () => {
+    setShowSnackbar(false);
   };
 
   return (
@@ -38,7 +60,7 @@ const SolarQuotesPage = () => {
         spacing={2}
         justifyContent='flex-start' // Align to the left
         alignItems='center'
-        style={{ height: "90vh", flexDirection: "column" }}
+        style={{ height: "60vh", flexDirection: "column" }}
       >
         {["Home", "Business", "Non Profit"].map((option, index) => (
           <Grid item key={index}>
@@ -52,10 +74,9 @@ const SolarQuotesPage = () => {
             </StyledButton>
           </Grid>
         ))}
-        <Grid item style={{ marginLeft: "auto", marginTop: "40px" }}>
+        <Grid item style={{ marginLeft: "340px", marginTop: "40px" }}>
           <StyledButton
-            // variant='outlined'
-            onClick={() => handleButtonClick("Next")} // Enable the button
+            onClick={handleNextButtonClick}
             sx={{
               width: "100px",
               height: "80px",
@@ -77,6 +98,22 @@ const SolarQuotesPage = () => {
           </StyledButton>
         </Grid>
       </Grid>
+
+      {/* Material UI Alert for Snackbar */}
+      <Snackbar
+        open={showSnackbar}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          severity='warning'
+          variant='filled'
+          onClose={handleSnackbarClose}
+        >
+          Please select an option.
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

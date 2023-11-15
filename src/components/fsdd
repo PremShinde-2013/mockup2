@@ -1,5 +1,0 @@
-  //      {selectedOption === "Next" && (
-  //        <Typography variant='h6' style={{ marginTop: "20px" }}>
-  //          Hello, {name}! {/* Display the entered name */}
-  //        </Typography>
-  //      )}

@@ -1,28 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Grid,
   Container,
   Typography,
   Button,
-  Slider,
   TextField,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import { green } from "@mui/material/colors";
+import { useNavigate } from "react-router-dom";
 
 // Custom styled component for the button
-const ResponsiveButton = styled(Button)({
-  width: "100%",
-  height: "80px",
-  border: "none",
-  "&:hover": {
-    backgroundColor: "white",
-    color: "black",
-    border: "none",
-  },
-});
-
 const StyledButton = styled(Button)({
   color: "black",
   border: "1px solid black",
@@ -45,16 +36,61 @@ const StyledTextField = styled(TextField)({
   },
 });
 
-const GetName = () => {
-  const [selectedOption, setSelectedOption] = React.useState(null);
-  const [name, setName] = React.useState("");
+const GreenBorderTextField = styled(TextField)({
+  width: "100%",
+  "& .MuiOutlinedInput-root": {
+    "& fieldset": {
+      borderColor: green[500],
+    },
+    "&:hover fieldset": {
+      borderColor: green[700],
+    },
+  },
+});
 
-  const handleButtonClick = (option) => {
-    setSelectedOption(option);
+const GetName = () => {
+  const [name, setName] = useState("");
+  const [showLetterError, setShowLetterError] = useState(false);
+  const [showEmptyError, setShowEmptyError] = useState(false);
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  const handleButtonClick = () => {
+    if (/^[a-zA-Z]+$/.test(name)) {
+      // Only letters are allowed
+      setShowLetterError(false);
+      setShowEmptyError(false);
+
+      // Add logic to navigate to the next page if needed
+      // Use useNavigate to navigate to the next page (e.g., /next-page)
+      navigate("/get-contact");
+    } else if (name.trim() === "") {
+      // Empty input error
+      setShowEmptyError(true);
+      setShowLetterError(false);
+    } else {
+      // Display error if input contains non-letter characters
+      setShowLetterError(true);
+      setShowEmptyError(false);
+    }
   };
 
   const handleNameChange = (event) => {
-    setName(event.target.value);
+    const input = event.target.value;
+
+    // Validate input to allow only letters
+    if (/^[a-zA-Z]*$/.test(input)) {
+      setName(input);
+      setShowLetterError(false);
+      setShowEmptyError(false);
+    } else if (input.trim() === "") {
+      // Empty input error
+      setShowEmptyError(true);
+      setShowLetterError(false);
+    } else {
+      // Display error if input contains non-letter characters
+      setShowLetterError(true);
+      setShowEmptyError(false);
+    }
   };
 
   return (
@@ -80,19 +116,23 @@ const GetName = () => {
 
           <Grid item xs={12}>
             {/* Use StyledTextField instead of TextField */}
-            <StyledTextField
+            <GreenBorderTextField
               label='Enter your name'
               variant='outlined'
               color='success'
               fullWidth
               value={name}
               onChange={handleNameChange}
+              sx={{
+                borderColor:
+                  showLetterError || showEmptyError ? green[700] : green[500],
+              }}
             />
           </Grid>
 
           <Grid item style={{ marginLeft: "auto", marginTop: "40px" }}>
             <StyledButton
-              onClick={() => handleButtonClick("Next")}
+              onClick={handleButtonClick}
               sx={{
                 width: "100px",
                 height: "80px",
@@ -115,6 +155,38 @@ const GetName = () => {
           </Grid>
         </Grid>
       </Grid>
+
+      {/* Material UI Alert for Letter Error */}
+      <Snackbar
+        open={showLetterError}
+        autoHideDuration={6000}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        onClose={() => setShowLetterError(false)}
+      >
+        <Alert
+          severity='warning'
+          variant='filled'
+          onClose={() => setShowLetterError(false)}
+        >
+          Please enter only letters.
+        </Alert>
+      </Snackbar>
+
+      {/* Material UI Alert for Empty Error */}
+      <Snackbar
+        open={showEmptyError}
+        autoHideDuration={6000}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        onClose={() => setShowEmptyError(false)}
+      >
+        <Alert
+          severity='warning'
+          variant='filled'
+          onClose={() => setShowEmptyError(false)}
+        >
+          Please Fill In The Name Field.
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

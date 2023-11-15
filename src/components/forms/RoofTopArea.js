@@ -4,15 +4,14 @@ import {
   Container,
   Typography,
   Button,
-  Slider,
   TextField,
-  Alert,
   Snackbar,
+  Alert,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import { green } from "@mui/material/colors";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { Navigate, useNavigate } from "react-router-dom";
 
 const StyledButton = styled(Button)({
   color: "black",
@@ -29,6 +28,13 @@ const StyledButton = styled(Button)({
   },
 });
 
+// Set the border color to green for TextField
+const StyledTextField = styled(TextField)({
+  "& .MuiOutlinedInput-root": {
+    borderColor: green[500],
+  },
+});
+
 const GreenBorderTextField = styled(TextField)({
   width: "100%",
   "& .MuiOutlinedInput-root": {
@@ -41,60 +47,46 @@ const GreenBorderTextField = styled(TextField)({
   },
 });
 
-const ElectricityBillPage = () => {
-  const [sliderValue, setSliderValue] = useState(4000);
-  const [sanctionedLoad, setSanctionedLoad] = useState("");
-  const [showAlert, setShowAlert] = useState(false);
-  const [showNumberError, setShowNumberError] = useState(false); // Added state for number validation
+const RoofTopArea = () => {
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [roofTopArea, setRoofTopArea] = useState("");
+  const [showNumberError, setShowNumberError] = useState(false);
+  const [showEmptyError, setShowEmptyError] = useState(false);
   const navigate = useNavigate(); // Initialize useNavigate
 
   const handleButtonClick = () => {
-    if (sanctionedLoad.trim() === "") {
-      // Display alert if TextField is empty
-      setShowAlert(true);
+    if (roofTopArea.trim() === "") {
+      setShowNumberError(false);
+      setShowEmptyError(true);
+    } else if (!/^\d+$/.test(roofTopArea)) {
+      setShowEmptyError(false);
+      setShowNumberError(true);
     } else {
-      setShowAlert(false);
-      // Use useNavigate to navigate to /solar-roof-finder
-      // navigate("/solar-roof-finder");
-      // navigate("/get-name");
-      navigate("/get-rooftop-area");
+      setShowEmptyError(false);
+      setShowNumberError(false);
+      setSelectedOption("Next");
+      // Add logic to navigate to the next page if needed
+      // Use useNavigate to navigate to /get-name
+      navigate("/get-name");
     }
   };
 
-  const handleSliderChange = (event, newValue) => {
-    setSliderValue(newValue);
-  };
-
-  const handleSanctionedLoadChange = (event) => {
+  const handleRoofTopAreaChange = (event) => {
     const input = event.target.value;
 
-    // Validate input to allow only numbers and a decimal point
-    if (/^\d*\.?\d*$/.test(input)) {
-      setSanctionedLoad(input);
+    // Validate input to allow only numbers
+    if (/^\d*$/.test(input)) {
+      setRoofTopArea(input);
       setShowNumberError(false);
     } else {
-      // Display error if input contains non-numeric characters or multiple decimal points
+      // Display error if input contains non-numeric characters
       setShowNumberError(true);
     }
   };
 
-  const handleAlertClose = () => {
-    setShowAlert(false);
-  };
-
-  const handleNumberErrorClose = (event, reason) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    setShowNumberError(false);
-  };
-
   return (
     <Container>
-      <Typography
-        variant='h3'
-        style={{ marginBottom: "20px", textAlign: "center" }}
-      >
+      <Typography variant='h3' style={{ marginBottom: "20px" }}>
         Easiest way to go solar!
       </Typography>
       <Grid
@@ -110,32 +102,22 @@ const ElectricityBillPage = () => {
           style={{ width: "100%", maxWidth: "600px", padding: "0 16px" }}
         >
           <Grid item xs={12}>
-            <Typography variant='h6'>
-              Electricity bill in Last Month:
-              <span style={{ fontWeight: "bold" }}> {sliderValue}</span>
-            </Typography>
+            <Typography variant='h6'>Available Rooftop Area</Typography>
           </Grid>
+
           <Grid item xs={12}>
-            <Slider
-              value={sliderValue}
-              max={10000}
-              min={0}
-              aria-label='Default'
-              valueLabelDisplay='on'
-              onChange={handleSliderChange}
-              sx={{ color: "green", fontWeight: "bold" }}
-            />
-          </Grid>
-          <Grid item xs={12}>
+            {/* Use StyledTextField instead of TextField */}
             <GreenBorderTextField
-              label='Sanctioned Load (in KW)'
-              margin='normal'
+              label='Shadow Free Area (sq.ft)'
+              variant='outlined'
               color='success'
-              value={sanctionedLoad}
-              onChange={handleSanctionedLoadChange}
+              fullWidth
+              value={roofTopArea}
+              onChange={handleRoofTopAreaChange}
             />
           </Grid>
-          <Grid item style={{ marginLeft: "auto", marginTop: "20px" }}>
+
+          <Grid item style={{ marginLeft: "auto", marginTop: "40px" }}>
             <StyledButton
               onClick={handleButtonClick}
               sx={{
@@ -161,35 +143,39 @@ const ElectricityBillPage = () => {
         </Grid>
       </Grid>
 
-      {/* Material UI Alert */}
-      <Snackbar
-        open={showAlert}
-        autoHideDuration={6000}
-        onClose={handleAlertClose}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert severity='warning' variant='filled' onClose={handleAlertClose}>
-          Please fill in the Sanctioned Load field.
-        </Alert>
-      </Snackbar>
-
-      {/* Number error Snackbar */}
+      {/* Material UI Alert for Number Error */}
       <Snackbar
         open={showNumberError}
-        autoHideDuration={3000}
-        onClose={handleNumberErrorClose}
+        autoHideDuration={6000}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        onClose={() => setShowNumberError(false)}
       >
         <Alert
           severity='error'
           variant='filled'
-          onClose={handleNumberErrorClose}
+          onClose={() => setShowNumberError(false)}
         >
-          Please Enter Only Numbers.
+          Please enter a valid number.
+        </Alert>
+      </Snackbar>
+
+      {/* Material UI Alert for Empty Error */}
+      <Snackbar
+        open={showEmptyError}
+        autoHideDuration={6000}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        onClose={() => setShowEmptyError(false)}
+      >
+        <Alert
+          severity='warning'
+          variant='filled'
+          onClose={() => setShowEmptyError(false)}
+        >
+          Please fill in the Rooftop Area field.
         </Alert>
       </Snackbar>
     </Container>
   );
 };
 
-export default ElectricityBillPage;
+export default RoofTopArea;
