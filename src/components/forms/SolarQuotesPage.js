@@ -1,18 +1,13 @@
-import React, { useState } from "react";
-import {
-  Grid,
-  Container,
-  Button,
-  Typography,
-  Snackbar,
-  Alert,
-} from "@mui/material";
+import React from "react";
+import { Grid, Container, Button, Typography, Box } from "@mui/material";
 import { styled } from "@mui/system";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
-import { green } from "@mui/material/colors";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { green, grey } from "@mui/material/colors";
+import { useNavigate } from "react-router-dom";
+import logo from "../../Image/company logo.png";
+import useSolarQuotesStore from "../../store/SolarQuotesStore"; // Import the Zustand store
+import { useTheme } from "@mui/material/styles";
 
-// Custom styled component for the buttons
 const StyledButton = styled(Button)({
   color: "black",
   border: "1px solid green",
@@ -27,41 +22,76 @@ const StyledButton = styled(Button)({
 });
 
 const SolarQuotesPage = () => {
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [showSnackbar, setShowSnackbar] = useState(false);
+  const {
+    selectedOption,
+    isButtonDisabled,
+    setSelectedOption,
+    setIsButtonDisabled,
+  } = useSolarQuotesStore();
   const navigate = useNavigate();
+  const theme = useTheme();
 
   const handleButtonClick = (option) => {
     setSelectedOption(option);
+    setIsButtonDisabled(false);
   };
 
   const handleNextButtonClick = () => {
     if (selectedOption) {
-      // If an option is selected, navigate to /electricity-bill
       navigate("/electricity-bill");
-    } else {
-      // If no option is selected, show Snackbar
-      setShowSnackbar(true);
     }
-  };
-
-  const handleSnackbarClose = () => {
-    setShowSnackbar(false);
   };
 
   return (
     <Container>
-      <h1>Easiest way to go solar!</h1>
-      <Typography variant='h5' style={{ marginBottom: "10px" }}>
-        Requesting quotes for
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: { xs: "row", md: "row" },
+          gap: "5px",
+          padding: "10px",
+          boxShadow: "none",
+          backgroundColor: "#fff",
+        }}
+      >
+        <img
+          src={logo}
+          alt='Logo'
+          style={{ width: "100px", height: "auto", borderRadius: "50%" }}
+        />
+        <Typography
+          variant='h5'
+          sx={{
+            color: "black",
+            fontWeight: "bold",
+            letterSpacing: "1px",
+            textAlign: { xs: "left", md: "left" },
+            fontSize: { xs: "18px", md: "30px" },
+          }}
+        >
+          Easiest way to go solar!
+        </Typography>
+      </Box>
       <Grid
         container
         spacing={2}
-        justifyContent='flex-start' // Align to the left
+        justifyContent='flex-start'
         alignItems='center'
         style={{ height: "60vh", flexDirection: "column" }}
       >
+        <Typography
+          variant='h6'
+          sx={{
+            marginBottom: { xs: "10px", md: "20px" },
+            marginTop: { xs: "70px", md: "30px" },
+            textAlign: "center",
+          }}
+        >
+          Requesting quotes for
+        </Typography>
+
         {["Home", "Business", "Non Profit"].map((option, index) => (
           <Grid item key={index}>
             <StyledButton
@@ -74,9 +104,19 @@ const SolarQuotesPage = () => {
             </StyledButton>
           </Grid>
         ))}
-        <Grid item style={{ marginLeft: "340px", marginTop: "40px" }}>
+        <Grid
+          item
+          sx={{
+            marginLeft: "340px",
+            marginTop: "40px",
+            "@media (max-width:600px)": {
+              marginLeft: "170px",
+            },
+          }}
+        >
           <StyledButton
             onClick={handleNextButtonClick}
+            disabled={isButtonDisabled}
             sx={{
               width: "100px",
               height: "80px",
@@ -89,31 +129,26 @@ const SolarQuotesPage = () => {
               },
             }}
           >
-            <Typography variant='h6' color='initial'>
+            <Typography
+              variant='h6'
+              color='initial'
+              sx={{
+                color: isButtonDisabled ? grey[600] : grey[900],
+              }}
+            >
               Next
             </Typography>
             <ArrowForwardIosRoundedIcon
-              sx={{ color: green[500], fontSize: 35 }}
+              sx={{
+                color: isButtonDisabled
+                  ? grey[600]
+                  : theme.palette.primary.main,
+                fontSize: 35,
+              }}
             />
           </StyledButton>
         </Grid>
       </Grid>
-
-      {/* Material UI Alert for Snackbar */}
-      <Snackbar
-        open={showSnackbar}
-        autoHideDuration={6000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert
-          severity='warning'
-          variant='filled'
-          onClose={handleSnackbarClose}
-        >
-          Please select an option.
-        </Alert>
-      </Snackbar>
     </Container>
   );
 };

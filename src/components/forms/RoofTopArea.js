@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// RoofTopArea.js
+import React, { useEffect } from "react";
 import {
   Grid,
   Container,
@@ -7,66 +8,71 @@ import {
   TextField,
   Snackbar,
   Alert,
+  Box,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
-import { green } from "@mui/material/colors";
-import { Navigate, useNavigate } from "react-router-dom";
-
-const StyledButton = styled(Button)({
-  color: "black",
-  border: "1px solid black",
-  "&:hover": {
-    backgroundColor: "white",
-    color: "black",
-    border: "1px solid green",
-  },
-  "&.Mui-selected": {
-    backgroundColor: "green",
-    color: "white",
-    border: "1px solid green",
-  },
-});
-
-// Set the border color to green for TextField
-const StyledTextField = styled(TextField)({
-  "& .MuiOutlinedInput-root": {
-    borderColor: green[500],
-  },
-});
-
-const GreenBorderTextField = styled(TextField)({
-  width: "100%",
-  "& .MuiOutlinedInput-root": {
-    "& fieldset": {
-      borderColor: green[500],
-    },
-    "&:hover fieldset": {
-      borderColor: green[700],
-    },
-  },
-});
+import { green, grey } from "@mui/material/colors";
+import { useNavigate } from "react-router-dom";
+import logo from "../../Image/company logo.png";
+import useRoofTopAreaStore from "../../store/useRoofTopAreaStore";
+import { useTheme } from "@mui/material/styles";
 
 const RoofTopArea = () => {
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [roofTopArea, setRoofTopArea] = useState("");
-  const [showNumberError, setShowNumberError] = useState(false);
-  const [showEmptyError, setShowEmptyError] = useState(false);
-  const navigate = useNavigate(); // Initialize useNavigate
+  const {
+    roofTopArea,
+    showNumberError,
+    showEmptyError,
+    isButtonDisabled,
+    setRoofTopArea,
+    setShowNumberError,
+    setShowEmptyError,
+    setIsButtonDisabled,
+  } = useRoofTopAreaStore();
+  const navigate = useNavigate();
+  const theme = useTheme();
+
+  const StyledButton = styled(Button)({
+    color: "black",
+    border: "1px solid black",
+    "&:hover": {
+      backgroundColor: "white",
+      color: "black",
+      border: "1px solid green",
+    },
+    "&.Mui-selected": {
+      backgroundColor: theme.palette.primary.main,
+      color: "white",
+      border: "1px solid green",
+    },
+  });
+
+  const GreenBorderTextField = styled(TextField)({
+    width: "100%",
+    "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+        borderColor: theme.palette.primary.main,
+      },
+      "&:hover fieldset": {
+        borderColor: theme.palette.primary.main,
+      },
+    },
+  });
+  useEffect(() => {
+    // Update the button disabled state based on the form validity
+    setIsButtonDisabled(!roofTopArea.trim() || showNumberError);
+  }, [roofTopArea, showNumberError, setIsButtonDisabled]);
 
   const handleButtonClick = () => {
     if (roofTopArea.trim() === "") {
-      setShowNumberError(false);
       setShowEmptyError(true);
-    } else if (!/^\d+$/.test(roofTopArea)) {
+    } else if (!/^\d+(\.\d+)?$/.test(roofTopArea)) {
       setShowEmptyError(false);
       setShowNumberError(true);
     } else {
       setShowEmptyError(false);
       setShowNumberError(false);
-      setSelectedOption("Next");
-      // Add logic to navigate to the next page if needed
-      // Use useNavigate to navigate to /get-name
+      setIsButtonDisabled(false);
       navigate("/get-name");
     }
   };
@@ -74,27 +80,57 @@ const RoofTopArea = () => {
   const handleRoofTopAreaChange = (event) => {
     const input = event.target.value;
 
-    // Validate input to allow only numbers
-    if (/^\d*$/.test(input)) {
+    // Validate input to allow numbers and decimal point
+    if (/^\d*(\.\d*)?$/.test(input)) {
+      // Update the rooftop area in the store
       setRoofTopArea(input);
       setShowNumberError(false);
+      setIsButtonDisabled(false);
     } else {
-      // Display error if input contains non-numeric characters
       setShowNumberError(true);
+      setIsButtonDisabled(true);
     }
   };
 
   return (
     <Container>
-      <Typography variant='h3' style={{ marginBottom: "20px" }}>
-        Easiest way to go solar!
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: { xs: "row", md: "row" },
+          gap: "5px",
+          padding: "10px",
+          boxShadow: "none",
+          backgroundColor: "#fff",
+        }}
+      >
+        <img
+          src={logo}
+          alt='Logo'
+          style={{ width: "100px", height: "auto", borderRadius: "50%" }}
+        />
+        <Typography
+          variant='h5'
+          sx={{
+            color: "black",
+            fontWeight: "bold",
+            letterSpacing: "1px",
+
+            textAlign: { xs: "left", md: "left" },
+            fontSize: { xs: "18px", md: "30px" }, // Adjust font size based on screen size
+          }}
+        >
+          Easiest way to go solar!
+        </Typography>
+      </Box>
       <Grid
         container
         spacing={2}
         justifyContent='center'
         alignItems='center'
-        style={{ height: "60vh", flexDirection: "column" }}
+        style={{ height: "50vh", flexDirection: "column" }}
       >
         <Grid
           container
@@ -106,7 +142,6 @@ const RoofTopArea = () => {
           </Grid>
 
           <Grid item xs={12}>
-            {/* Use StyledTextField instead of TextField */}
             <GreenBorderTextField
               label='Shadow Free Area (sq.ft)'
               variant='outlined'
@@ -120,6 +155,7 @@ const RoofTopArea = () => {
           <Grid item style={{ marginLeft: "auto", marginTop: "40px" }}>
             <StyledButton
               onClick={handleButtonClick}
+              disabled={isButtonDisabled}
               sx={{
                 width: "100px",
                 height: "80px",
@@ -132,11 +168,22 @@ const RoofTopArea = () => {
                 },
               }}
             >
-              <Typography variant='h6' color='initial'>
+              <Typography
+                variant='h6'
+                color='initial'
+                sx={{
+                  color: isButtonDisabled ? grey[600] : grey[900],
+                }}
+              >
                 Next
               </Typography>
               <ArrowForwardIosRoundedIcon
-                sx={{ color: green[500], fontSize: 35 }}
+                sx={{
+                  color: isButtonDisabled
+                    ? grey[600]
+                    : theme.palette.primary.main,
+                  fontSize: 35,
+                }}
               />
             </StyledButton>
           </Grid>

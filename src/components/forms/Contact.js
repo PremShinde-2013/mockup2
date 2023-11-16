@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// Contact.js
+import React, { useEffect } from "react";
 import {
   Grid,
   Container,
@@ -10,13 +11,16 @@ import {
   FormControl,
   Snackbar,
   Alert,
+  Box,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
-import { green } from "@mui/material/colors";
+import { green, grey } from "@mui/material/colors";
 import { useNavigate } from "react-router-dom";
+import logo from "../../Image/company logo.png";
+import useContactStore from "../../store/useContactStore";
 
-// Custom styled component for the button
+import { useTheme } from "@mui/material/styles";
 const StyledButton = styled(Button)({
   color: "black",
   border: "1px solid black",
@@ -30,51 +34,72 @@ const StyledButton = styled(Button)({
     color: "white",
     border: "1px solid green",
   },
-});
-
-// Set the border color to green for TextField
-const StyledTextField = styled(TextField)({
-  "& .MuiOutlinedInput-root": {
-    borderColor: green[500],
-  },
-});
-
-// Set the color of the checkmark to green
-const StyledCheckbox = styled(Checkbox)({
-  "&.Mui-checked": {
-    color: green[500],
+  "&.Mui-disabled": {
+    color: grey[300],
   },
 });
 
 const Contact = () => {
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [name, setName] = useState("");
-  const [whatsapp, setWhatsapp] = useState(false);
-  const [calls, setCalls] = useState(false);
-  const [useEmail, setUseEmail] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
-
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const {
+    phone,
+    whatsapp,
+    calls,
+    emailChecked,
+    email,
+    error,
+    isButtonDisabled,
+    snackbarOpen,
+    setPhone,
+    setWhatsapp,
+    setCalls,
+    setEmailChecked,
+    setEmail,
+    setError,
+    setIsButtonDisabled,
+    setSnackbarOpen,
+  } = useContactStore();
   const navigate = useNavigate();
+  const theme = useTheme();
 
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
+  const StyledTextField = styled(TextField)({
+    "& .MuiOutlinedInput-root": {
+      borderColor: theme.palette.primary.main,
+    },
+  });
+
+  const StyledCheckbox = styled(Checkbox)({
+    "&.Mui-checked": {
+      color: theme.palette.primary.main,
+    },
+  });
+  useEffect(() => {
+    // Enable/disable the button based on the selection
+    setIsButtonDisabled(
+      !(
+        phone &&
+        (whatsapp || calls || (emailChecked && email && validateEmail(email)))
+      )
+    );
+  }, [phone, whatsapp, calls, emailChecked, email, setIsButtonDisabled]);
 
   const handleButtonClick = () => {
-    // Validate the phone number and email if email is selected
-    const isValidNumber = /^\d{10}$/.test(phoneNumber);
-    const isValidEmail = !useEmail || /^\S+@\S+\.\S+$/.test(email);
-
+    // Validate the phone number
+    const isValidNumber = /^\d{10}$/.test(phone);
     if (!isValidNumber) {
       setError("Please enter a valid 10-digit phone number.");
       setSnackbarOpen(true);
       return;
     }
 
-    if (!isValidEmail) {
+    // Validate that at least one option is selected
+    if (!whatsapp && !calls && (!emailChecked || (emailChecked && !email))) {
+      setError("Please select at least one option and provide a valid email.");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    // Validate email if email option is selected
+    if (emailChecked && !validateEmail(email)) {
       setError("Please enter a valid email address.");
       setSnackbarOpen(true);
       return;
@@ -83,54 +108,124 @@ const Contact = () => {
     // Reset error state
     setError("");
 
-    // Proceed with the button click logic
-    setSelectedOption("Next");
-
-    // If all fields are filled, navigate to "/success"
-    if (phoneNumber) {
-      navigate("/success");
-    }
+    // Navigate to success page
+    navigate("/success");
   };
 
-  const handleNameChange = (event) => {
-    setName(event.target.value);
+  const handlephoneChange = (event) => {
+    const inputValue = event.target.value;
+    setPhone(inputValue);
+    if (!/^\d{0,10}$/.test(inputValue)) {
+      setError("Please enter numbers only.");
+      setSnackbarOpen(true);
+    } else {
+      setError("");
+      setSnackbarOpen(false);
+    }
+    // Enable/disable the button based on the selection
+    setIsButtonDisabled(
+      !(
+        inputValue &&
+        (whatsapp || calls || (emailChecked && email && validateEmail(email)))
+      )
+    );
   };
 
   const handleCheckboxChange = (event) => {
     const { name, checked } = event.target;
-
     if (name === "whatsapp") {
       setWhatsapp(checked);
     } else if (name === "calls") {
       setCalls(checked);
-    } else if (name === "useEmail") {
-      setUseEmail(checked);
+    } else if (name === "email") {
+      setEmailChecked(checked);
     }
+
+    // Enable/disable the button based on the selection
+    setIsButtonDisabled(
+      !(
+        phone &&
+        (checked ||
+          whatsapp ||
+          calls ||
+          (emailChecked && email && validateEmail(email)))
+      )
+    );
   };
 
-  const GreenBorderTextField = styled(TextField)({
-    width: "100%",
-    "& .MuiOutlinedInput-root": {
-      "& fieldset": {
-        borderColor: green[500],
-      },
-      "&:hover fieldset": {
-        borderColor: green[700],
-      },
-    },
-  });
+  const handleEmailChange = (event) => {
+    const inputValue = event.target.value;
+    setEmail(inputValue);
+    if (emailChecked && !validateEmail(inputValue)) {
+      setError("Please enter a valid email address.");
+      setSnackbarOpen(true);
+    } else {
+      setError("");
+      setSnackbarOpen(false);
+    }
+    // Enable/disable the button based on the selection
+    setIsButtonDisabled(
+      !(
+        phone &&
+        (whatsapp ||
+          calls ||
+          (emailChecked && inputValue && validateEmail(inputValue)))
+      )
+    );
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
+  const validateEmail = (email) => {
+    // Basic email validation
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
 
   return (
     <Container>
-      <Typography variant='h3' style={{ marginBottom: "20px" }}>
-        Easiest way to go solar!
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: { xs: "row", md: "row" },
+          gap: "5px",
+          padding: "10px",
+          boxShadow: "none",
+          backgroundColor: "#fff",
+        }}
+      >
+        <img
+          src={logo}
+          alt='Logo'
+          style={{ width: "100px", height: "auto", borderRadius: "50%" }}
+        />
+        <Typography
+          variant='h5'
+          sx={{
+            color: "black",
+            fontWeight: "bold",
+            letterSpacing: "1px",
+
+            textAlign: { xs: "left", md: "left" },
+            fontSize: { xs: "18px", md: "30px" },
+          }}
+        >
+          Easiest way to go solar!
+        </Typography>
+      </Box>
       <Grid
         container
         spacing={2}
         justifyContent='center'
         alignItems='center'
-        style={{ height: "60vh", flexDirection: "column" }}
+        sx={{
+          height: { xs: "70vh", md: "80vh" },
+          flexDirection: "column",
+        }}
       >
         <Grid
           container
@@ -138,26 +233,17 @@ const Contact = () => {
           style={{ width: "100%", maxWidth: "600px", padding: "0 16px" }}
         >
           <Grid item xs={12}>
-            <Typography variant='h5'>To reach you</Typography>
+            <Typography variant='h5'>To Contact You</Typography>
           </Grid>
 
           <Grid item xs={12}>
-            <GreenBorderTextField
+            <StyledTextField
               label='Contact Number'
               variant='outlined'
               color='success'
               fullWidth
-              value={phoneNumber}
-              onChange={(e) => {
-                const inputValue = e.target.value;
-                setPhoneNumber(inputValue);
-                if (!/^\d{0,10}$/.test(inputValue)) {
-                  setError("Please enter a valid 10-digit phone number.");
-                  setSnackbarOpen(true);
-                } else {
-                  setError("");
-                }
-              }}
+              value={phone}
+              onChange={handlephoneChange}
             />
           </Grid>
 
@@ -173,7 +259,7 @@ const Contact = () => {
                         name='whatsapp'
                       />
                     }
-                    label=' WhatsApp'
+                    label='Only WhatsApp'
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -185,51 +271,43 @@ const Contact = () => {
                         name='calls'
                       />
                     }
-                    label=' Call'
+                    label='Only Calls'
                   />
                 </Grid>
                 <Grid item xs={12}>
                   <FormControlLabel
                     control={
                       <StyledCheckbox
-                        checked={useEmail}
+                        checked={emailChecked}
                         onChange={handleCheckboxChange}
-                        name='useEmail'
+                        name='email'
                       />
                     }
-                    label='Email'
+                    label='Only email'
                   />
                 </Grid>
               </Grid>
             </FormControl>
           </Grid>
 
-          {useEmail && (
-            <Grid item xs={12}>
-              <GreenBorderTextField
-                label='Email Address'
+          <Grid item xs={12}>
+            {emailChecked && (
+              <StyledTextField
+                label='Email'
                 variant='outlined'
                 color='success'
                 fullWidth
                 value={email}
-                onChange={(e) => {
-                  const inputValue = e.target.value;
-                  setEmail(inputValue);
-                  if (!/^\S+@\S+\.\S+$/.test(inputValue)) {
-                    setError("Please enter a valid email address.");
-                    setSnackbarOpen(true);
-                  } else {
-                    setError("");
-                  }
-                }}
+                onChange={handleEmailChange}
                 style={{ marginTop: "16px" }}
               />
-            </Grid>
-          )}
+            )}
+          </Grid>
 
           <Grid item style={{ marginLeft: "auto", marginTop: "40px" }}>
             <StyledButton
               onClick={handleButtonClick}
+              disabled={isButtonDisabled}
               sx={{
                 width: "100px",
                 height: "80px",
@@ -242,28 +320,36 @@ const Contact = () => {
                 },
               }}
             >
-              <Typography variant='h6' color='initial'>
+              <Typography
+                variant='h6'
+                color='initial'
+                sx={{
+                  color: isButtonDisabled ? grey[600] : grey[900],
+                }}
+              >
                 Complete
               </Typography>
               <ArrowForwardIosRoundedIcon
-                sx={{ color: green[500], fontSize: 35 }}
+                sx={{
+                  color: isButtonDisabled
+                    ? grey[600]
+                    : theme.palette.primary.main,
+                  fontSize: 35,
+                }}
               />
             </StyledButton>
           </Grid>
         </Grid>
       </Grid>
 
+      {/* Snackbar for displaying errors */}
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={3000}
+        autoHideDuration={6000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert
-          severity='warning'
-          variant='filled'
-          onClose={handleSnackbarClose}
-        >
+        <Alert severity='warning' onClose={handleSnackbarClose}>
           {error}
         </Alert>
       </Snackbar>

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// GetName.js
+import React, { useEffect } from "react";
 import {
   Grid,
   Container,
@@ -7,97 +8,132 @@ import {
   TextField,
   Snackbar,
   Alert,
+  Box,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
-import { green } from "@mui/material/colors";
+import { green, grey } from "@mui/material/colors";
 import { useNavigate } from "react-router-dom";
-
-// Custom styled component for the button
-const StyledButton = styled(Button)({
-  color: "black",
-  border: "1px solid black",
-  "&:hover": {
-    backgroundColor: "white",
-    color: "black",
-    border: "1px solid green",
-  },
-  "&.Mui-selected": {
-    backgroundColor: "green",
-    color: "white",
-    border: "1px solid green",
-  },
-});
-
-// Set the border color to green for TextField
-const StyledTextField = styled(TextField)({
-  "& .MuiOutlinedInput-root": {
-    borderColor: green[500],
-  },
-});
-
-const GreenBorderTextField = styled(TextField)({
-  width: "100%",
-  "& .MuiOutlinedInput-root": {
-    "& fieldset": {
-      borderColor: green[500],
-    },
-    "&:hover fieldset": {
-      borderColor: green[700],
-    },
-  },
-});
+import logo from "../../Image/company logo.png";
+import useNameStore from "../../store/useNameStore";
+import { useTheme } from "@mui/material/styles";
 
 const GetName = () => {
-  const [name, setName] = useState("");
-  const [showLetterError, setShowLetterError] = useState(false);
-  const [showEmptyError, setShowEmptyError] = useState(false);
-  const navigate = useNavigate(); // Initialize useNavigate
+  const {
+    name,
+    showLetterError,
+    showEmptyError,
+    isButtonDisabled,
+    setName,
+    setShowLetterError,
+    setShowEmptyError,
+    setIsButtonDisabled,
+  } = useNameStore();
+  const navigate = useNavigate();
+
+  const theme = useTheme();
+
+  const StyledButton = styled(Button)({
+    color: "black",
+    border: "1px solid black",
+    "&:hover": {
+      backgroundColor: "white",
+      color: "black",
+      border: "1px solid green",
+    },
+    "&.Mui-selected": {
+      backgroundColor: "green",
+      color: "white",
+      border: "1px solid green",
+    },
+  });
+
+  const GreenBorderTextField = styled(TextField)({
+    width: "100%",
+    "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+        borderColor: theme.palette.primary.main,
+      },
+      "&:hover fieldset": {
+        borderColor: theme.palette.primary.main,
+      },
+    },
+  });
+
+  useEffect(() => {
+    // Update the button disabled state based on the form validity
+    setIsButtonDisabled(!/^[a-zA-Z]+$/.test(name) || showEmptyError);
+  }, [name, showEmptyError, setIsButtonDisabled]);
 
   const handleButtonClick = () => {
     if (/^[a-zA-Z]+$/.test(name)) {
-      // Only letters are allowed
       setShowLetterError(false);
       setShowEmptyError(false);
-
-      // Add logic to navigate to the next page if needed
-      // Use useNavigate to navigate to the next page (e.g., /next-page)
+      setIsButtonDisabled(false);
       navigate("/get-contact");
     } else if (name.trim() === "") {
-      // Empty input error
       setShowEmptyError(true);
       setShowLetterError(false);
+      setIsButtonDisabled(true);
     } else {
-      // Display error if input contains non-letter characters
       setShowLetterError(true);
       setShowEmptyError(false);
+      setIsButtonDisabled(true);
     }
   };
 
   const handleNameChange = (event) => {
     const input = event.target.value;
 
-    // Validate input to allow only letters
     if (/^[a-zA-Z]*$/.test(input)) {
       setName(input);
       setShowLetterError(false);
       setShowEmptyError(false);
+      setIsButtonDisabled(false);
     } else if (input.trim() === "") {
-      // Empty input error
       setShowEmptyError(true);
       setShowLetterError(false);
+      setIsButtonDisabled(true);
     } else {
-      // Display error if input contains non-letter characters
       setShowLetterError(true);
       setShowEmptyError(false);
+      setIsButtonDisabled(true);
     }
   };
 
   return (
     <Container>
-      <Typography variant='h3' style={{ marginBottom: "20px" }}>
-        Easiest way to go solar!
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: { xs: "row", md: "row" },
+          gap: "5px",
+          padding: "10px",
+          boxShadow: "none",
+          backgroundColor: "#fff",
+        }}
+      >
+        <img
+          src={logo}
+          alt='Logo'
+          style={{ width: "100px", height: "auto", borderRadius: "50%" }}
+        />
+        <Typography
+          variant='h5'
+          sx={{
+            color: "black",
+            fontWeight: "bold",
+            letterSpacing: "1px",
+
+            textAlign: { xs: "left", md: "left" },
+            fontSize: { xs: "18px", md: "30px" },
+          }}
+        >
+          Easiest way to go solar!
+        </Typography>
+      </Box>
       <Grid
         container
         spacing={2}
@@ -115,7 +151,6 @@ const GetName = () => {
           </Grid>
 
           <Grid item xs={12}>
-            {/* Use StyledTextField instead of TextField */}
             <GreenBorderTextField
               label='Enter your name'
               variant='outlined'
@@ -125,7 +160,9 @@ const GetName = () => {
               onChange={handleNameChange}
               sx={{
                 borderColor:
-                  showLetterError || showEmptyError ? green[700] : green[500],
+                  showLetterError || showEmptyError
+                    ? green[700]
+                    : theme.palette.primary.main,
               }}
             />
           </Grid>
@@ -133,6 +170,7 @@ const GetName = () => {
           <Grid item style={{ marginLeft: "auto", marginTop: "40px" }}>
             <StyledButton
               onClick={handleButtonClick}
+              disabled={isButtonDisabled}
               sx={{
                 width: "100px",
                 height: "80px",
@@ -145,11 +183,22 @@ const GetName = () => {
                 },
               }}
             >
-              <Typography variant='h6' color='initial'>
+              <Typography
+                variant='h6'
+                color='initial'
+                sx={{
+                  color: isButtonDisabled ? grey[600] : grey[900],
+                }}
+              >
                 Next
               </Typography>
               <ArrowForwardIosRoundedIcon
-                sx={{ color: green[500], fontSize: 35 }}
+                sx={{
+                  color: isButtonDisabled
+                    ? grey[600]
+                    : theme.palette.primary.main,
+                  fontSize: 35,
+                }}
               />
             </StyledButton>
           </Grid>
@@ -184,7 +233,7 @@ const GetName = () => {
           variant='filled'
           onClose={() => setShowEmptyError(false)}
         >
-          Please Fill In The Name Field.
+          Please fill in the Name field.
         </Alert>
       </Snackbar>
     </Container>

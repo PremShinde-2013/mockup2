@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// ElectricityBillPage.js
+import React, { useEffect } from "react";
 import {
   Grid,
   Container,
@@ -8,73 +9,89 @@ import {
   TextField,
   Alert,
   Snackbar,
+  Box,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
-import { green } from "@mui/material/colors";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
-
-const StyledButton = styled(Button)({
-  color: "black",
-  border: "1px solid black",
-  "&:hover": {
-    backgroundColor: "white",
-    color: "black",
-    border: "1px solid green",
-  },
-  "&.Mui-selected": {
-    backgroundColor: "green",
-    color: "white",
-    border: "1px solid green",
-  },
-});
-
-const GreenBorderTextField = styled(TextField)({
-  width: "100%",
-  "& .MuiOutlinedInput-root": {
-    "& fieldset": {
-      borderColor: green[500],
-    },
-    "&:hover fieldset": {
-      borderColor: green[700],
-    },
-  },
-});
+import { green, grey } from "@mui/material/colors";
+import { useNavigate } from "react-router-dom";
+import logo from "../../Image/company logo.png";
+import useElectricityBillStore from "../../store/ElectricityBillPageStore";
+import { useTheme } from "@mui/material/styles";
 
 const ElectricityBillPage = () => {
-  const [sliderValue, setSliderValue] = useState(4000);
-  const [sanctionedLoad, setSanctionedLoad] = useState("");
-  const [showAlert, setShowAlert] = useState(false);
-  const [showNumberError, setShowNumberError] = useState(false); // Added state for number validation
-  const navigate = useNavigate(); // Initialize useNavigate
+  const {
+    sliderValue,
+    sanctionedLoad,
+    showAlert,
+    showNumberError,
+    isButtonDisabled,
+    setSliderValue,
+    setSanctionedLoad,
+    setShowAlert,
+    setShowNumberError,
+    setIsButtonDisabled,
+  } = useElectricityBillStore();
+  const navigate = useNavigate();
+  const theme = useTheme();
+
+  const StyledButton = styled(Button)({
+    color: "black",
+    border: "1px solid black",
+    "&:hover": {
+      backgroundColor: "white",
+      color: "black",
+      border: "1px solid green",
+    },
+    "&.Mui-selected": {
+      backgroundColor: "green",
+      color: "white",
+      border: "1px solid green",
+    },
+  });
+
+  const GreenBorderTextField = styled(TextField)({
+    width: "100%",
+    "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+        borderColor: theme.palette.primary.main,
+      },
+      "&:hover fieldset": {
+        borderColor: theme.palette.primary.main,
+      },
+    },
+  });
+  useEffect(() => {
+    // Update the button disabled state based on the form validity
+    setIsButtonDisabled(!sanctionedLoad.trim());
+  }, [sanctionedLoad, setIsButtonDisabled]);
 
   const handleButtonClick = () => {
     if (sanctionedLoad.trim() === "") {
-      // Display alert if TextField is empty
       setShowAlert(true);
     } else {
       setShowAlert(false);
-      // Use useNavigate to navigate to /solar-roof-finder
-      // navigate("/solar-roof-finder");
-      // navigate("/get-name");
+      setIsButtonDisabled(false); // Enable the button
       navigate("/get-rooftop-area");
     }
   };
 
-  const handleSliderChange = (event, newValue) => {
+  const handleSliderChange = (_, newValue) => {
+    // Update the slider value in the store
     setSliderValue(newValue);
   };
 
   const handleSanctionedLoadChange = (event) => {
     const input = event.target.value;
 
-    // Validate input to allow only numbers and a decimal point
     if (/^\d*\.?\d*$/.test(input)) {
+      // Update the sanctioned load in the store
       setSanctionedLoad(input);
       setShowNumberError(false);
+      setIsButtonDisabled(false); // Enable the button
     } else {
-      // Display error if input contains non-numeric characters or multiple decimal points
       setShowNumberError(true);
+      setIsButtonDisabled(true); // Disable the button
     }
   };
 
@@ -82,7 +99,7 @@ const ElectricityBillPage = () => {
     setShowAlert(false);
   };
 
-  const handleNumberErrorClose = (event, reason) => {
+  const handleNumberErrorClose = (_, reason) => {
     if (reason === "clickaway") {
       return;
     }
@@ -91,12 +108,37 @@ const ElectricityBillPage = () => {
 
   return (
     <Container>
-      <Typography
-        variant='h3'
-        style={{ marginBottom: "20px", textAlign: "center" }}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: { xs: "row", md: "row" },
+          gap: "5px",
+          padding: "10px",
+          boxShadow: "none",
+          backgroundColor: "#fff",
+        }}
       >
-        Easiest way to go solar!
-      </Typography>
+        <img
+          src={logo}
+          alt='Logo'
+          style={{ width: "100px", height: "auto", borderRadius: "50%" }}
+        />
+        <Typography
+          variant='h5'
+          sx={{
+            color: "black",
+            fontWeight: "bold",
+            letterSpacing: "1px",
+
+            textAlign: { xs: "left", md: "left" },
+            fontSize: { xs: "18px", md: "30px" }, // Adjust font size based on screen size
+          }}
+        >
+          Easiest way to go solar!
+        </Typography>
+      </Box>
       <Grid
         container
         spacing={2}
@@ -138,6 +180,7 @@ const ElectricityBillPage = () => {
           <Grid item style={{ marginLeft: "auto", marginTop: "20px" }}>
             <StyledButton
               onClick={handleButtonClick}
+              disabled={isButtonDisabled}
               sx={{
                 width: "100px",
                 height: "80px",
@@ -150,11 +193,22 @@ const ElectricityBillPage = () => {
                 },
               }}
             >
-              <Typography variant='h6' color='initial'>
+              <Typography
+                variant='h6'
+                color='initial'
+                sx={{
+                  color: isButtonDisabled ? grey[600] : grey[900],
+                }}
+              >
                 Next
               </Typography>
               <ArrowForwardIosRoundedIcon
-                sx={{ color: green[500], fontSize: 35 }}
+                sx={{
+                  color: isButtonDisabled
+                    ? grey[600]
+                    : theme.palette.primary.main,
+                  fontSize: 35,
+                }}
               />
             </StyledButton>
           </Grid>
